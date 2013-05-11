@@ -342,7 +342,7 @@ namespace System.Collections.Immutable
 
 		public ImmutableList<T> Clear ()
 		{
-			return Empty;
+			return Empty.WithComparer (valueComparer);
 		}
 
 		IImmutableList<T> IImmutableList<T>.Clear ()
