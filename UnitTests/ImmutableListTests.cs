@@ -297,9 +297,20 @@ namespace UnitTests
 
 			for (int i = 0 ; i < 10;i++)
 				list = list.Add (i);
-				
+
 			for (int i = 0 ; i < 10;i += 2)
 				Assert.AreEqual (i, list.IndexOf (i));
+		}
+
+		[Test]
+		public void TestFindIndex ()
+		{
+			var list = ImmutableList.Create<int> ();
+
+			for (int i = 0 ; i < 10;i++)
+				list = list.Add (i);
+
+			Assert.AreEqual (5, list.FindIndex (i => i == 5));
 		}
 	}
 }

@@ -94,25 +94,38 @@ namespace System.Collections.Immutable
 			return builder.ToImmutable ();
 		}
 
-//		public int FindIndex (int startIndex, int count, Predicate<T> match)
-//		{
-//			throw new NotImplementedException ();
-//		}
-//
-//		public int FindIndex (Predicate<T> match)
-//		{
-//			if (match == null)
-//				throw new ArgumentNullException ("match");
-//			return FindIndex (0, Count, match);
-//		}
-//
-//		public int FindIndex (int startIndex, Predicate<T> match)
-//		{
-//			if (match == null)
-//				throw new ArgumentNullException ("match");
-//			return FindIndex (startIndex, Count - startIndex, match);
-//		}
-//
+		public int FindIndex (int startIndex, int count, Predicate<T> match)
+		{
+			if (startIndex < 0 || startIndex >= Count)
+				throw new ArgumentOutOfRangeException ("startIndex");
+			if (count < 0 || startIndex + count > Count)
+				throw new ArgumentOutOfRangeException ("count");
+			if (match == null)
+				throw new ArgumentNullException ("match");
+
+			int i = startIndex;
+			foreach (var item in root.Enumerate (startIndex, count, false)) {
+				if (match (item))
+					return i;
+				i++;
+			}
+			return -1;
+		}
+
+		public int FindIndex (Predicate<T> match)
+		{
+			if (match == null)
+				throw new ArgumentNullException ("match");
+			return FindIndex (0, Count, match);
+		}
+
+		public int FindIndex (int startIndex, Predicate<T> match)
+		{
+			if (match == null)
+				throw new ArgumentNullException ("match");
+			return FindIndex (startIndex, Count - startIndex, match);
+		}
+
 		public T FindLast (Predicate<T> match)
 		{
 			if (match == null)
@@ -167,6 +180,11 @@ namespace System.Collections.Immutable
 
 		public int IndexOf (T value, int index, int count)
 		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ("index");
+			if (count < 0 || index + count > Count)
+				throw new ArgumentOutOfRangeException ("count");
+
 			int i = index;
 			foreach (var item in root.Enumerate (index, count, false)) {
 				if (valueComparer.Equals (item, value))
