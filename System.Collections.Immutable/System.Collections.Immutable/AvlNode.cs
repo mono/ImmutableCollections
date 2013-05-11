@@ -423,7 +423,7 @@ namespace System.Collections.Immutable
 		/// <summary>
 		/// Enumerate from largest to smallest key
 		/// </summary>
-		public IEnumerator<T> Enumerate (bool reverse)
+		public IEnumerator<T> GetEnumerator (bool reverse)
 		{
 			var to_visit = new Stack<AvlNode<T>> ();
 			to_visit.Push (this);
@@ -468,7 +468,7 @@ namespace System.Collections.Immutable
 		{
 			// TODO!
 			int i;
-			var e = Enumerate (reverse);
+			var e = GetEnumerator (reverse);
 			if (!reverse) {
 				i = 0;
 				while (e.MoveNext ()) {

@@ -575,7 +575,7 @@ namespace System.Collections.Immutable
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			return root.Enumerate (false);
+			return root.GetEnumerator (false);
 		}
 
 		#endregion

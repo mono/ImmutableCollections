@@ -214,9 +214,9 @@ namespace System.Collections.Immutable
 
 		public TValue this [TKey key] {
 			get {
-				var node = root.SearchNode (new KeyValuePair<TKey, TValue> (key, default(TValue)), CompareKV);
-				if (!node.IsEmpty)
-					return node.Value.Value;
+				TValue value;
+				if (TryGetValue (key, out value))
+					return value;
 				throw new KeyNotFoundException (String.Format ("Key: {0}", key));
 			}
 		}
@@ -281,49 +281,183 @@ namespace System.Collections.Immutable
 
 		#endregion
 
-//		public override bool Equals (object o)
-//		{
-//			if (object.ReferenceEquals (this, o)) {
-//				return true;
-//			}
-//			var other = o as ImmutableDictionary<TKey, TValue>;
-//			if (other != null) {
-//				//Equivalent must have same count:
-//				if (other._count != _count) {
-//					return false;
-//				}
-//				//Now go element by element:
-//				bool all_equal = true;
-//				//Enumeration goes in a sorted order:
-//				var this_enum = GetEnumerator ();
-//				var o_enum = other.GetEnumerator ();
-//				while (all_equal) {
-//					this_enum.MoveNext ();
-//					//Since we have the same count, this must return same as above
-//					//Both are finished, but were equal to this point:
-//					if (!o_enum.MoveNext ()) {
-//						return true;
-//					}
-//					var tkv = this_enum.Current;
-//					var okv = o_enum.Current;
-//					all_equal = tkv.Key.Equals (okv.Key) &&
-//					//Handle case of null values:
-//						(null != tkv.Value ? tkv.Value.Equals (okv.Value)
-//						 : null == okv.Value);
-//				}
-//				return all_equal;
-//			}
-//			return false;
-//
-//		}	
-//
-//		public override int GetHashCode ()
-//		{
-//			var imd = Min;
-//			if (imd != Empty)
-//				return imd.Key.GetHashCode () ^ (imd.Value != null ? imd.Value.GetHashCode () : 0);
-//			return 0;
-//		}
+		public Builder ToBuilder ()
+		{
+			return new Builder (root, keyComparer, valueComparer);
+		}
+
+		public sealed class Builder : IDictionary<TKey, TValue>
+		{
+			AvlNode<KeyValuePair<TKey, TValue>> root;
+			IEqualityComparer<TKey> keyComparer;
+
+			public IEqualityComparer<TKey> KeyComparer {
+				get {
+					return keyComparer;
+				}
+				set {
+					keyComparer = value;
+				}
+			}
+
+			IEqualityComparer<TValue> valueComparer;
+
+			public IEqualityComparer<TValue> ValueComparer {
+				get {
+					return valueComparer;
+				}
+				set {
+					valueComparer = value;
+				}
+			}
+
+			internal Builder (AvlNode<KeyValuePair<TKey, TValue>> root, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer)
+			{
+				this.root = root;
+				this.keyComparer = keyComparer;
+				this.valueComparer = valueComparer;
+			}
+
+			public ImmutableDictionary<TKey, TValue> ToImmutable ()
+			{
+				return new ImmutableDictionary<TKey, TValue> (root, keyComparer, valueComparer);
+			}
+
+			#region IDictionary implementation
+			public void Add (TKey key, TValue value)
+			{
+				Add (new KeyValuePair<TKey, TValue> (key, value));
+			}
+
+			public bool ContainsKey (TKey key)
+			{
+				return !root.SearchNode (new KeyValuePair<TKey, TValue> (key, default (TValue)), CompareKV).IsEmpty;
+			}
+
+			public bool Remove (TKey key)
+			{
+				bool found;
+				root = root.RemoveFromNew (new KeyValuePair<TKey, TValue> (key, default (TValue)), CompareKV, out found);
+				return found;
+			}
+
+			public bool TryGetValue (TKey key, out TValue value)
+			{
+				var node = root.SearchNode (new KeyValuePair<TKey, TValue> (key, default(TValue)), CompareKV);
+				if (node.IsEmpty) {
+					value = default (TValue);
+					return false;
+				}
+				value = node.Value.Value;
+				return true;
+			}
+
+			public TValue this [TKey key] {
+				get {
+					TValue value;
+					if (TryGetValue (key, out value))
+						return value;
+					throw new KeyNotFoundException (String.Format ("Key: {0}", key));
+				}
+				set {
+					if (ContainsKey (key))
+						Remove (key);
+					Add (key, value);
+				}
+			}
+
+			ICollection<TKey> IDictionary<TKey, TValue>.Keys {
+				get {
+					return Keys.ToList ();
+				}
+			}
+
+			public IEnumerable<TKey> Keys {
+				get {
+					foreach (var kv in this) {
+						yield return kv.Key;
+					}
+				}
+			}
+
+			ICollection<TValue> IDictionary<TKey, TValue>.Values {
+				get {
+					return Values.ToList ();
+				}
+			}
+
+			public IEnumerable<TValue> Values {
+				get {
+					foreach (var kv in this) {
+						yield return kv.Value;
+					}
+				}
+			}
+			#endregion
+
+			#region ICollection implementation
+			public void Add (KeyValuePair<TKey, TValue> item)
+			{
+				root = root.InsertIntoNew (item, CompareKV);
+			}
+
+			public void Clear ()
+			{
+				root = new AvlNode<KeyValuePair<TKey, TValue>> ();
+			}
+
+			public bool Contains (KeyValuePair<TKey, TValue> item)
+			{
+				TValue value;
+				if (!TryGetValue (item.Key, out value))
+					return false;
+				return valueComparer.Equals (value, item.Value);
+			}
+
+			public void CopyTo (KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+			{
+				if (arrayIndex < 0 || arrayIndex + Count > array.Length)
+					throw new ArgumentOutOfRangeException ("arrayIndex");
+				foreach (var pair in this) {
+					array [arrayIndex++] = pair;
+				}
+			}
+
+			public bool Remove (KeyValuePair<TKey, TValue> item)
+			{
+				if (!Contains (item))
+					return false;
+				Remove (item.Key);
+				return true;
+			}
+
+			public int Count {
+				get {
+					return root.Count;
+				}
+			}
+
+			public bool IsReadOnly {
+				get {
+					return false;
+				}
+			}
+			#endregion
+
+			#region IEnumerable implementation
+			public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator ()
+			{
+				return root.GetEnumerator (false);
+			}
+			#endregion
+
+			#region IEnumerable implementation
+			IEnumerator IEnumerable.GetEnumerator ()
+			{
+				return this.GetEnumerator ();
+			}
+			#endregion
+		}
 	}
 
 	public static class ImmutableDictionary
