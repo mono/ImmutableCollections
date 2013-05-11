@@ -338,5 +338,20 @@ namespace UnitTests
 
 			Assert.AreEqual (8, list.LastIndexOf (1));
 		}
+
+		[Test]
+		public void TestGetRange ()
+		{
+			var list = ImmutableList.Create<int> ();
+
+			for (int i = 0 ; i < 10;i++)
+				list = list.Add (i);
+
+			list = list.GetRange (5, 3);
+
+			Assert.AreEqual (3, list.Count);
+			for (int i = 0; i < 3; i++)
+				Assert.AreEqual (5 + i, list [i]);
+		}
 	}
 }

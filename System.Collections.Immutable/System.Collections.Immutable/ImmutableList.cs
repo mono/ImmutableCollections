@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using System.Threading;
 
 namespace System.Collections.Immutable
 {
@@ -50,21 +51,32 @@ namespace System.Collections.Immutable
 
 		public void CopyTo (int index, T[] array, int arrayIndex, int count)
 		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ("index");
 			if (array == null)
 				throw new ArgumentNullException ("array");
-			//TODO!!!
-			foreach (var item in this.Skip (index).Take (count)) {
+			if (arrayIndex < 0 || arrayIndex + count > array.Length)
+				throw new ArgumentOutOfRangeException ("arrayIndex");
+			if (count < 0 || index + count > Count)
+				throw new ArgumentOutOfRangeException ("count");
+			foreach (var item in root.Enumerate (index, count, false)) {
 				array [arrayIndex++] = item;
 			}
 		}
 
 		public void CopyTo (T[] array, int arrayIndex)
 		{
+			if (array == null)
+				throw new ArgumentNullException ("array");
+			if (arrayIndex < 0 || arrayIndex + Count > array.Length)
+				throw new ArgumentOutOfRangeException ("arrayIndex");
 			CopyTo (0, array, 0, Count);
 		}
 
 		public void CopyTo (T[] array)
 		{
+			if (array == null)
+				throw new ArgumentNullException ("array");
 			CopyTo (array, 0);
 		}
 
@@ -139,7 +151,7 @@ namespace System.Collections.Immutable
 		{
 			if (match == null)
 				throw new ArgumentNullException ("match");
-			return FindLastIndex (Count - 1, match);
+			return FindLastIndex (Count - 1, Count, match);
 		}
 
 		public int FindLastIndex (int startIndex, Predicate<T> match)
@@ -148,7 +160,7 @@ namespace System.Collections.Immutable
 				throw new ArgumentOutOfRangeException ("startIndex");
 			if (match == null)
 				throw new ArgumentNullException ("match");
-			return FindLastIndex (startIndex, Count - startIndex, match);
+			return FindLastIndex (startIndex, startIndex + 1, match);
 		}
 
 		public int FindLastIndex (int startIndex, int count, Predicate<T> match)
@@ -178,11 +190,11 @@ namespace System.Collections.Immutable
 			}
 		}
 
-//		public ImmutableList<T> GetRange (int index, int count)
-//		{
-//			throw new NotImplementedException ();
-//		}
-//
+		public ImmutableList<T> GetRange (int index, int count)
+		{
+			return ImmutableList.Create (valueComparer, root.Enumerate (index, count, false));
+		}
+
 		public int IndexOf (T value)
 		{
 			return IndexOf (value, 0, Count);
@@ -295,13 +307,13 @@ namespace System.Collections.Immutable
 
 		bool ICollection.IsSynchronized {
 			get {
-				throw new NotImplementedException ();
+				return true;
 			}
 		}
 
 		object ICollection.SyncRoot {
 			get {
-				throw new NotImplementedException ();
+				return this;
 			}
 		}
 

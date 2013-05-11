@@ -475,7 +475,7 @@ namespace System.Collections.Immutable
 					if (index <= i)
 						yield return e.Current;
 					i++;
-					if (i > index + count)
+					if (i >= index + count)
 						break;
 				}
 			} else {
@@ -484,7 +484,7 @@ namespace System.Collections.Immutable
 					if (i <= index)
 						yield return e.Current;
 					i--;
-					if (i < index - count)
+					if (i <= index - count)
 						break;
 				}
 			}
