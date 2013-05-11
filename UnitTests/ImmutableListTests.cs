@@ -325,5 +325,18 @@ namespace UnitTests
 
 			Assert.AreEqual (8, list.FindLastIndex (i => i == 1));
 		}
+
+		[Test]
+		public void TestLastIndexOf ()
+		{
+			var list = ImmutableList.Create<int> ();
+
+			for (int i = 0 ; i < 10;i++)
+				list = list.Add (i);
+
+			list = list.SetItem (8, 1);
+
+			Assert.AreEqual (8, list.LastIndexOf (1));
+		}
 	}
 }

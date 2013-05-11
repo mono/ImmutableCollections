@@ -155,7 +155,7 @@ namespace System.Collections.Immutable
 		{
 			if (startIndex < 0 || startIndex >= Count)
 				throw new ArgumentOutOfRangeException ("startIndex");
-			if (count > Count || startIndex - count < 0)
+			if (count > Count || startIndex - count + 1 < 0)
 				throw new ArgumentOutOfRangeException ("count");
 			if (match == null)
 				throw new ArgumentNullException ("match");
@@ -202,24 +202,29 @@ namespace System.Collections.Immutable
 			if (count < 0 || index + count > Count)
 				throw new ArgumentOutOfRangeException ("count");
 
-			int i = index;
-			foreach (var item in root.Enumerate (index, count, false)) {
-				if (valueComparer.Equals (item, value))
-					return i;
-				i++;
-			}
-			return -1;
+			return FindIndex (index, count, i => valueComparer.Equals (value, i));
 		}
 
-//		public int LastIndexOf (T item, int index)
-//		{
-//		}
-//		public int LastIndexOf (T item)
-//		{
-//		}
-//		public int LastIndexOf (T item, int index, int count)
-//		{
-//		}
+		public int LastIndexOf (T item, int index)
+		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ("index");
+			return LastIndexOf (item, index, index + 1);
+		}
+
+		public int LastIndexOf (T item)
+		{
+			return LastIndexOf (item, Count - 1, Count);
+		}
+
+		public int LastIndexOf (T item, int index, int count)
+		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ("index");
+			if (count > Count || index - count + 1 < 0)
+				throw new ArgumentOutOfRangeException ("count");
+			return FindLastIndex (index, count, i => valueComparer.Equals (item, i));
+		}
 
 		#region IList implementation
 
