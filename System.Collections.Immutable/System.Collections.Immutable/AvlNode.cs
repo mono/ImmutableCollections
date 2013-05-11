@@ -39,15 +39,26 @@ namespace System.Collections.Immutable
 					return true;
 				}
 			}
+
+			public override AvlNode<T> NewOrMutate (T newValue, AvlNode<T> newLeft, AvlNode<T> newRight) {
+				throw new NotSupportedException ();
+			}
+
+			public override AvlNode<T> ToMutable () {
+				return this;
+			}
 		}
 
-		public readonly T Value;
-		internal readonly AvlNode<T> left;
-		internal readonly AvlNode<T> right;
-		readonly int _count;
-		readonly int _depth;
+		public T Value;
+		AvlNode<T> left;
+		AvlNode<T> right;
+		int _count;
+		int _depth;
 
 		public virtual bool IsEmpty { get { return false; } }
+
+		public AvlNode<T> Left { get { return left; } }
+		public AvlNode<T> Right { get { return right; } }
 
 		public int Count {
 			get {
@@ -124,8 +135,8 @@ namespace System.Collections.Immutable
 				}
 				if (left.Balance == -1) {
 					//Rotate LTDict:
-					var newlt = left.RotateToLT ();
-					var newroot = new AvlNode<T> (Value, newlt, right);
+					var newlt = ToMutableIfNecessary (left).RotateToLT ();
+					var newroot = NewOrMutate (Value, newlt, right);
 					return newroot.RotateToGT ();
 				}
 				throw new Exception (String.Format ("LTDict too unbalanced: {0}", left.Balance));
@@ -137,8 +148,8 @@ namespace System.Collections.Immutable
 				}
 				if (right.Balance == 1) {
 					//Rotate GTDict:
-					var newgt = right.RotateToGT ();
-					var newroot = new AvlNode<T> (Value, left, newgt);
+					var newgt = ToMutableIfNecessary (right).RotateToGT ();
+					var newroot = NewOrMutate (Value, left, newgt);
 					return newroot.RotateToLT ();
 				}
 				throw new Exception (String.Format ("LTDict too unbalanced: {0}", left.Balance));
@@ -179,12 +190,12 @@ namespace System.Collections.Immutable
 			AvlNode<T> newgt = right;
 
 			if (index <= left._count) {
-				newlt = left.InsertIntoNew (index, val);
+				newlt = ToMutableIfNecessary (left).InsertIntoNew (index, val);
 			} else {
-				newgt = right.InsertIntoNew (index - left._count - 1, val);
+				newgt = ToMutableIfNecessary (right).InsertIntoNew (index - left._count - 1, val);
 			}
 
-			var newroot = new AvlNode<T> (Value, newlt, newgt);
+			var newroot = NewOrMutate (Value, newlt, newgt);
 			return newroot.FixRootBalance ();
 		}
 
@@ -205,15 +216,15 @@ namespace System.Collections.Immutable
 			T newv = Value;
 			if (comp < 0) {
 				//Let the GTDict put it in:
-				newgt = right.InsertIntoNew (val, comparer);
+				newgt = ToMutableIfNecessary (right).InsertIntoNew (val, comparer);
 			} else if (comp > 0) {
 				//Let the LTDict put it in:
-				newlt = left.InsertIntoNew (val, comparer);
+				newlt = ToMutableIfNecessary (left).InsertIntoNew (val, comparer);
 			} else {
 				//Replace the current value:
 				newv = val;
 			}
-			var newroot = new AvlNode<T> (newv, newlt, newgt);
+			var newroot = NewOrMutate (newv, newlt, newgt);
 			return newroot.FixRootBalance ();
 		}
 
@@ -223,13 +234,13 @@ namespace System.Collections.Immutable
 			AvlNode<T> newgt = right;
 
 			if (index < left._count) {
-				newlt = left.SetItem (index, val);
+				newlt = ToMutableIfNecessary (left).SetItem (index, val);
 			} else if (index > left._count) {
-				newgt = right.SetItem (index - left._count - 1, val);
+				newgt = ToMutableIfNecessary (right).SetItem (index - left._count - 1, val);
 			} else {
-				return new AvlNode<T> (val, newlt, newgt);
+				return NewOrMutate (val, newlt, newgt);
 			}
-			return new AvlNode<T> (Value, newlt, newgt);
+			return NewOrMutate (Value, newlt, newgt);
 		}
 
 		public AvlNode<T> GetNodeAt (int index)
@@ -246,35 +257,35 @@ namespace System.Collections.Immutable
 		/// if the key is not found, old_node is Empty, else old_node is the Dict
 		/// with matching Key
 		/// </summary>
-		public AvlNode<T> RemoveFromNew (int index, out AvlNode<T> old_node)
+		public AvlNode<T> RemoveFromNew (int index, out bool found)
 		{
 			if (IsEmpty) {
-				old_node = Empty;
+				found = false;
 				return Empty;
 			}
 
 			if (index < left._count) {
-				var newlt = left.RemoveFromNew (index, out old_node);
-				if (old_node.IsEmpty) {
+				var newlt = ToMutableIfNecessary (left).RemoveFromNew (index, out found);
+				if (!found) {
 					//Not found, so nothing changed
 					return this;
 				}
-				var newroot = new AvlNode<T> (Value, newlt, right);
+				var newroot = NewOrMutate (Value, newlt, right);
 				return newroot.FixRootBalance ();
 			}
 
 			if (index > left._count) {
-				var newgt = right.RemoveFromNew (index - left._count - 1, out old_node);
-				if (old_node.IsEmpty) {
+				var newgt = ToMutableIfNecessary (right).RemoveFromNew (index - left._count - 1, out found);
+				if (!found) {
 					//Not found, so nothing changed
 					return this;
 				}
-				var newroot = new AvlNode<T> (Value, left, newgt);
+				var newroot = NewOrMutate (Value, left, newgt);
 				return newroot.FixRootBalance ();
 			}
 
 			//found it
-			old_node = this;
+			found = true;
 			return RemoveRoot ();
 		}
 
@@ -283,33 +294,33 @@ namespace System.Collections.Immutable
 		/// if the key is not found, old_node is Empty, else old_node is the Dict
 		/// with matching Key
 		/// </summary>
-		public AvlNode<T> RemoveFromNew (T val, Comparison<T> comparer, out AvlNode<T> old_node)
+		public AvlNode<T> RemoveFromNew (T val, Comparison<T> comparer, out bool found)
 		{
 			if (IsEmpty) {
-				old_node = Empty;
+				found = false;
 				return Empty;
 			}
 			int comp = comparer (Value, val);
 			if (comp < 0) {
-				var newgt = right.RemoveFromNew (val, comparer, out old_node);
-				if (old_node.IsEmpty) {
+				var newgt = ToMutableIfNecessary (right).RemoveFromNew (val, comparer, out found);
+				if (!found) {
 					//Not found, so nothing changed
 					return this;
 				}
-				var newroot = new AvlNode<T> (Value, left, newgt);
+				var newroot = NewOrMutate (Value, left, newgt);
 				return newroot.FixRootBalance ();
 			}
 			if (comp > 0) {
-				var newlt = left.RemoveFromNew (val, comparer, out old_node);
-				if (old_node.IsEmpty) {
+				var newlt = ToMutableIfNecessary (left).RemoveFromNew (val, comparer, out found);
+				if (!found) {
 					//Not found, so nothing changed
 					return this;
 				}
-				var newroot = new AvlNode<T> (Value, newlt, right);
+				var newroot = NewOrMutate (Value, newlt, right);
 				return newroot.FixRootBalance ();
 			}
 			//found it
-			old_node = this;
+			found = true;
 			return RemoveRoot ();
 		}
 
@@ -325,8 +336,8 @@ namespace System.Collections.Immutable
 				return left;
 			} else {
 				//Go down:
-				var newgt = right.RemoveMax (out max);
-				var newroot = new AvlNode<T> (Value, left, newgt);
+				var newgt = ToMutableIfNecessary (right).RemoveMax (out max);
+				var newroot = NewOrMutate (Value, left, newgt);
 				return newroot.FixRootBalance ();
 			}
 		}
@@ -343,8 +354,8 @@ namespace System.Collections.Immutable
 				return right;
 			}
 			//Go down:
-			var newlt = left.RemoveMin (out min);
-			var newroot = new AvlNode<T> (Value, newlt, right);
+			var newlt = ToMutableIfNecessary (left).RemoveMin (out min);
+			var newroot = NewOrMutate (Value, newlt, right);
 			return newroot.FixRootBalance ();
 		}
 
@@ -366,13 +377,13 @@ namespace System.Collections.Immutable
 			if (left._count < right._count) {
 				//LTDict has fewer, so promote from GTDict to minimize depth
 				AvlNode<T> min;
-				var newgt = right.RemoveMin (out min);
-				var newroot = new AvlNode<T> (min.Value, left, newgt);
+				var newgt = ToMutableIfNecessary (right).RemoveMin (out min);
+				var newroot = NewOrMutate (min.Value, left, newgt);
 				return newroot.FixRootBalance ();
 			} else {
 				AvlNode<T> max;
-				var newlt = left.RemoveMax (out max);
-				var newroot = new AvlNode<T> (max.Value, newlt, right);
+				var newlt = ToMutableIfNecessary (left).RemoveMax (out max);
+				var newroot = NewOrMutate (max.Value, newlt, right);
 				return newroot.FixRootBalance ();
 			}
 		}
@@ -386,10 +397,11 @@ namespace System.Collections.Immutable
 			if (left.IsEmpty || IsEmpty) {
 				return this;
 			}
-			var gLT = left.left;
-			var gGT = left.right;
-			var newgt = new AvlNode<T> (Value, gGT, right);
-			return new AvlNode<T> (left.Value, gLT, newgt);
+			var newLeft = ToMutableIfNecessary (left);
+			var lL = newLeft.left;
+			var lR = newLeft.right;
+			var newRight = NewOrMutate (Value, lR, right);
+			return newLeft.NewOrMutate (newLeft.Value, lL, newRight);
 		}
 
 		/// <summary>
@@ -401,10 +413,11 @@ namespace System.Collections.Immutable
 			if (right.IsEmpty || IsEmpty) {
 				return this;
 			}
-			var gLT = right.left;
-			var gGT = right.right;
-			var newlt = new AvlNode<T> (Value, left, gLT);
-			return new AvlNode<T> (right.Value, newlt, gGT);
+			var newRight = ToMutableIfNecessary (right);
+			var rL = newRight.left;
+			var rR = newRight.right;
+			var newLeft = NewOrMutate (Value, left, rL);
+			return newRight.NewOrMutate (newRight.Value, newLeft, rR);
 		}
 
 		/// <summary>
@@ -449,6 +462,53 @@ namespace System.Collections.Immutable
 					}
 				}
 			}
+		}
+
+		public virtual AvlNode<T> ToImmutable () {
+			return this;
+		}
+		
+		public virtual AvlNode<T> NewOrMutate (T newValue, AvlNode<T> newLeft, AvlNode<T> newRight) {
+			return new AvlNode<T> (newValue, newLeft, newRight);
+		}
+
+		public virtual AvlNode<T> ToMutable () {
+			//throw new NotImplementedException ();
+			return new MutableAvlNode (Value, left, right);
+		}
+
+		public virtual AvlNode<T> ToMutableIfNecessary (AvlNode<T> node) {
+			return node;
+		}
+
+		public virtual bool IsMutable { get { return false; } }
+
+		sealed class MutableAvlNode : AvlNode<T>
+		{
+			public MutableAvlNode (T val, AvlNode<T> lt, AvlNode<T> gt) : base (val, lt, gt) { }
+
+			public override AvlNode<T> ToImmutable () {
+				return new AvlNode<T> (Value, left.ToImmutable (), right.ToImmutable ());
+			}
+
+			public override AvlNode<T> NewOrMutate (T newValue, AvlNode<T> newLeft, AvlNode<T> newRight) {
+				Value = newValue;
+				left = newLeft;
+				right = newRight;
+				_count = 1 + left._count + right._count;
+				_depth = 1 + Math.Max (left._depth, right._depth);
+				return this;
+			}
+
+			public override AvlNode<T> ToMutable () {
+				return this;
+			}
+
+			public override AvlNode<T> ToMutableIfNecessary (AvlNode<T> node) {
+				return node.ToMutable ();
+			}
+
+			public override bool IsMutable { get { return true; } }
 		}
 	}
 }

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace System.Collections.Immutable
 {
@@ -421,8 +422,8 @@ namespace System.Collections.Immutable
 
 		public ImmutableList<T> RemoveAt (int index)
 		{
-			var old = root;
-			return new ImmutableList<T> (root.RemoveFromNew (index, out old), valueComparer);
+			bool found;
+			return new ImmutableList<T> (root.RemoveFromNew (index, out found), valueComparer);
 		}
 
 		IImmutableList<T> IImmutableList<T>.RemoveAt (int index)
@@ -543,6 +544,46 @@ namespace System.Collections.Immutable
 			}
 		}
 
+		#endregion
+
+		#region Builder
+		public Builder ToBuilder () {
+			return new Builder (root, valueComparer);
+		}
+
+		public class Builder
+		{
+			AvlNode<T> root;
+			readonly IEqualityComparer<T> valueComparer;
+
+			internal Builder (AvlNode<T> immutableRoot, IEqualityComparer<T> comparer) {
+				root = immutableRoot.ToMutable ();
+				valueComparer = comparer;
+			}
+
+			public ImmutableList<T> ToImmutable () {
+				return new ImmutableList<T> (root.ToImmutable (), valueComparer);
+			}
+
+			public void Add (T value)
+			{
+				Insert (Count, value);
+			}
+
+			public void Insert (int index, T element)
+			{
+				if (index > Count)
+					throw new ArgumentOutOfRangeException ("index");
+				root = root.InsertIntoNew (index, element);
+				Debug.Assert (root.IsMutable);
+			}
+
+			public int Count {
+				get {
+					return root.Count;
+				}
+			}
+		}
 		#endregion
 	}
 

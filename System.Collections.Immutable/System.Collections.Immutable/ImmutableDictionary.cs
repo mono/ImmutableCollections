@@ -129,9 +129,9 @@ namespace System.Collections.Immutable
 
 		public ImmutableDictionary<TKey, TValue> Remove (TKey key)
 		{
-			var old = root;
+			bool found;
 			var pair = new KeyValuePair<TKey,TValue> (key, default (TValue));
-			return new ImmutableDictionary<TKey, TValue> (root.RemoveFromNew (pair, CompareKV, out old), keyComparer, valueComparer);
+			return new ImmutableDictionary<TKey, TValue> (root.RemoveFromNew (pair, CompareKV, out found), keyComparer, valueComparer);
 		}
 
 		IImmutableDictionary<TKey, TValue> IImmutableDictionary<TKey, TValue>.Remove (TKey key)
@@ -249,15 +249,15 @@ namespace System.Collections.Immutable
 				if (this_d.IsEmpty) {
 					continue;
 				}
-				if (this_d.left.IsEmpty) {
+				if (this_d.Left.IsEmpty) {
 					//This is the next smallest value in the Dict:
 					yield return this_d.Value;
-					to_visit.Push (this_d.right);
+					to_visit.Push (this_d.Right);
 				} else {
 					//Break it up
-					to_visit.Push (this_d.right);
+					to_visit.Push (this_d.Right);
 					to_visit.Push (new AvlNode<KeyValuePair<TKey, TValue>> (this_d.Value));
-					to_visit.Push (this_d.left);
+					to_visit.Push (this_d.Left);
 				}
 			}
 		}

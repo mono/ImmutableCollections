@@ -240,5 +240,40 @@ namespace UnitTests
 			list.ForEach (i => sum += i);
 			Assert.AreEqual ((1 + 10) * 10 / 2, sum);
 		}
+
+		[Test]
+		public void TestBuilderLargeRandomInsert ()
+		{
+			const int N = 10000;
+			var list = ImmutableList.Create<int> ();
+			var reflist = new List<int> ();
+			var rand = new Random (123);
+			int i;
+			for (i = 0; i < N / 2; ++i) {
+				var r = rand.Next (0, i + 1);
+				list = list.Insert (r, i);
+				reflist.Insert (r, i);
+			}
+			var builder = list.ToBuilder ();
+			for (i = N / 2; i < N; ++i) {
+				var r = rand.Next (0, i + 1);
+				builder.Insert (r, i);
+				reflist.Insert (r, i);
+			}
+			list = builder.ToImmutable ();
+
+			Assert.AreEqual (N, list.Count);
+
+			// traverse by indexed access
+			for (i = 0; i < N; ++i)
+				Assert.AreEqual (reflist [i], list [i]);
+
+			// traverse by enumerator
+			i = 0;
+			foreach (var k in list) {
+				Assert.AreEqual (reflist [i], k);
+				++i;
+			}
+		}
 	}
 }
