@@ -82,11 +82,18 @@ namespace System.Collections.Immutable
 			return this.FirstOrDefault (i => match(i));
 		}
 
-//		public ImmutableList<T> FindAll (Predicate<T> match)
-//		{
-//			throw new NotImplementedException ();
-//		}
-//
+		public ImmutableList<T> FindAll (Predicate<T> match)
+		{
+			if (match == null)
+				throw new ArgumentNullException ("match");
+			var builder = Clear ().ToBuilder ();
+			foreach (var item in this) {
+				if (match (item))
+					builder.Add (item);
+			}
+			return builder.ToImmutable ();
+		}
+
 //		public int FindIndex (int startIndex, int count, Predicate<T> match)
 //		{
 //			throw new NotImplementedException ();
@@ -547,7 +554,8 @@ namespace System.Collections.Immutable
 		#endregion
 
 		#region Builder
-		public Builder ToBuilder () {
+		public Builder ToBuilder ()
+		{
 			return new Builder (root, valueComparer);
 		}
 

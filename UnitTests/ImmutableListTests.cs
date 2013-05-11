@@ -275,5 +275,20 @@ namespace UnitTests
 				++i;
 			}
 		}
+
+		
+		[Test]
+		public void TestFindAll ()
+		{
+			var list = ImmutableList.Create<int> ();
+
+			for (int i = 0 ; i < 10;i++)
+				list = list.Add (i);
+
+			var all = list.FindAll (x => x % 2 == 0);
+			Assert.AreEqual (10 / 2, all.Count);
+			for (int i = 0 ; i < 10;i += 2)
+				Assert.AreEqual (i, all[i / 2]);
+		}
 	}
 }
