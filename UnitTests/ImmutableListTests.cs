@@ -276,7 +276,6 @@ namespace UnitTests
 			}
 		}
 
-		
 		[Test]
 		public void TestFindAll ()
 		{
@@ -289,6 +288,18 @@ namespace UnitTests
 			Assert.AreEqual (10 / 2, all.Count);
 			for (int i = 0 ; i < 10;i += 2)
 				Assert.AreEqual (i, all[i / 2]);
+		}
+
+		[Test]
+		public void TestIndexOf ()
+		{
+			var list = ImmutableList.Create<int> ();
+
+			for (int i = 0 ; i < 10;i++)
+				list = list.Add (i);
+				
+			for (int i = 0 ; i < 10;i += 2)
+				Assert.AreEqual (i, list.IndexOf (i));
 		}
 	}
 }

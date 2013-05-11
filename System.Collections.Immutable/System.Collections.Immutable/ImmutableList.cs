@@ -155,17 +155,26 @@ namespace System.Collections.Immutable
 //			throw new NotImplementedException ();
 //		}
 //
-//		public int IndexOf (T value)
-//		{
-//		}
-//
-//		public int IndexOf (T item, int index)
-//		{
-//		}
-//
-//		public int IndexOf (T item, int index, int count)
-//		{
-//		}
+		public int IndexOf (T value)
+		{
+			return IndexOf (value, 0, Count);
+		}
+
+		public int IndexOf (T value, int index)
+		{
+			return IndexOf (value, 0, Count - index);
+		}
+
+		public int IndexOf (T value, int index, int count)
+		{
+			int i = index;
+			foreach (var item in root.Enumerate (index, count, false)) {
+				if (valueComparer.Equals (item, value))
+					return i;
+				i++;
+			}
+			return -1;
+		}
 
 //		public int LastIndexOf (T item, int index)
 //		{
@@ -355,18 +364,6 @@ namespace System.Collections.Immutable
 			return IndexOf (value) != -1;
 		}
 
-		public int IndexOf (T value)
-		{
-			int i = 0;
-			foreach (var item in this) {
-				if (valueComparer.Equals (item, value))
-					return i;
-				i++;
-
-			}
-			return - 1;
-		}
-
 		public ImmutableList<T> Insert (int index, T element)
 		{
 			if (index > Count)
@@ -526,7 +523,7 @@ namespace System.Collections.Immutable
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			return root.GetEnumerator (false);
+			return root.Enumerate (false);
 		}
 
 		#endregion
