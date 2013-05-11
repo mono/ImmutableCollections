@@ -472,16 +472,20 @@ namespace System.Collections.Immutable
 			if (!reverse) {
 				i = 0;
 				while (e.MoveNext ()) {
-					if (index <= i && i < index + count)
+					if (index <= i)
 						yield return e.Current;
 					i++;
+					if (i > index + count)
+						break;
 				}
 			} else {
 				i = Count - 1;
 				while (e.MoveNext ()) {
-					if (index - count < i && i <= index)
+					if (i <= index)
 						yield return e.Current;
-					i++;
+					i--;
+					if (i < index - count)
+						break;
 				}
 			}
 		}

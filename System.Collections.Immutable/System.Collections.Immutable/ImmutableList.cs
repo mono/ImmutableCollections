@@ -121,6 +121,8 @@ namespace System.Collections.Immutable
 
 		public int FindIndex (int startIndex, Predicate<T> match)
 		{
+			if (startIndex < 0 || startIndex >= Count)
+				throw new ArgumentOutOfRangeException ("startIndex");
 			if (match == null)
 				throw new ArgumentNullException ("match");
 			return FindIndex (startIndex, Count - startIndex, match);
@@ -133,27 +135,40 @@ namespace System.Collections.Immutable
 			return this.LastOrDefault (i => match(i));
 		}
 
-//		public int FindLastIndex (Predicate<T> match)
-//		{
-//			if (match == null)
-//				throw new ArgumentNullException ("match");
-//			return FindLast (Count - 1, match);
-//		}
-//
-//		public int FindLastIndex (int startIndex, Predicate<T> match)
-//		{
-//			if (match == null)
-//				throw new ArgumentNullException ("match");
-//			return FindLast (startIndex, Count - startIndex, match);
-//		}
-//
-//		public int FindLastIndex (int startIndex, int count, Predicate<T> match)
-//		{
-//			if (match == null)
-//				throw new ArgumentNullException ("match");
-//			throw new NotImplementedException ();
-//		}
-//
+		public int FindLastIndex (Predicate<T> match)
+		{
+			if (match == null)
+				throw new ArgumentNullException ("match");
+			return FindLastIndex (Count - 1, match);
+		}
+
+		public int FindLastIndex (int startIndex, Predicate<T> match)
+		{
+			if (startIndex < 0 || startIndex >= Count)
+				throw new ArgumentOutOfRangeException ("startIndex");
+			if (match == null)
+				throw new ArgumentNullException ("match");
+			return FindLastIndex (startIndex, Count - startIndex, match);
+		}
+
+		public int FindLastIndex (int startIndex, int count, Predicate<T> match)
+		{
+			if (startIndex < 0 || startIndex >= Count)
+				throw new ArgumentOutOfRangeException ("startIndex");
+			if (count > Count || startIndex - count < 0)
+				throw new ArgumentOutOfRangeException ("count");
+			if (match == null)
+				throw new ArgumentNullException ("match");
+
+			int index = startIndex;
+			foreach (var item in root.Enumerate (startIndex, count, true)) {
+				if (match (item))
+					return index;
+				index--;
+			}
+			return -1;
+		}
+
 		public void ForEach (Action<T> action)
 		{
 			if (action == null)
@@ -175,6 +190,8 @@ namespace System.Collections.Immutable
 
 		public int IndexOf (T value, int index)
 		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ("index");
 			return IndexOf (value, 0, Count - index);
 		}
 
