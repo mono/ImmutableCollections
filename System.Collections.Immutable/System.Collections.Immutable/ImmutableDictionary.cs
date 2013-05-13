@@ -341,6 +341,13 @@ namespace System.Collections.Immutable
 				return found;
 			}
 
+			public void SetItem (TKey key, TValue value)
+			{
+				if (ContainsKey (key))
+					Remove (key);
+				Add (key, value);
+			}
+
 			public bool TryGetValue (TKey key, out TValue value)
 			{
 				var node = root.SearchNode (new KeyValuePair<TKey, TValue> (key, default(TValue)), CompareKV);
