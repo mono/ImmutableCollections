@@ -89,5 +89,41 @@ namespace UnitTests
 				++j;
 			}
 		}
+
+		[Test]
+		public void TestBuilderLargeRandomInsert ()
+		{
+			const int N = 10000;
+			var indexes = new int [N];
+			for (int i = 0; i < N; ++i)
+				indexes [i] = i;
+			
+			var dict = ImmutableDictionary.Create<int, int> ();
+			
+			var rand = new Random (123);
+			
+			for (int i = N; i > N/2; --i) {
+				var ri = rand.Next (0, i);
+				var rv = indexes [ri];
+				indexes [ri] = indexes [i - 1];
+				dict = dict.Add (rv, -rv);
+			}
+
+			var builder = dict.ToBuilder ();
+			for (int i = N/2; i > 0; --i) {
+				var ri = rand.Next (0, i);
+				var rv = indexes [ri];
+				indexes [ri] = indexes [i - 1];
+				builder.Add (rv, -rv);
+			}
+			dict = builder.ToImmutable ();
+
+			int j = 0;
+			foreach (var kvp in dict) {
+				Assert.AreEqual (j, kvp.Key);
+				Assert.AreEqual (-j, kvp.Value);
+				++j;
+			}
+		}
 	}
 }
