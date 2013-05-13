@@ -313,7 +313,7 @@ namespace System.Collections.Immutable
 
 			internal Builder (AvlNode<KeyValuePair<TKey, TValue>> root, IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer)
 			{
-				this.root = root;
+				this.root = root.ToMutable ();
 				this.keyComparer = keyComparer;
 				this.valueComparer = valueComparer;
 			}
@@ -403,7 +403,7 @@ namespace System.Collections.Immutable
 
 			public void Clear ()
 			{
-				root = new AvlNode<KeyValuePair<TKey, TValue>> ();
+				root = new AvlNode<KeyValuePair<TKey, TValue>> ().ToMutable ();
 			}
 
 			public bool Contains (KeyValuePair<TKey, TValue> item)
