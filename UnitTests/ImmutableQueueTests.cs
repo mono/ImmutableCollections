@@ -29,106 +29,105 @@ using System.Collections.Immutable;
 
 namespace UnitTests
 {
-	[TestFixture]
-	public class ImmutableQueueTests
-	{
-		[Test]
-		public void TestSimpleOperation ()
-		{
-			var queue = ImmutableQueue.Create<int> ();
-			queue = queue.Enqueue (1);
-			queue = queue.Enqueue (2);
-			queue = queue.Enqueue (3);
+    [TestFixture]
+    public class ImmutableQueueTests
+    {
+        [Test]
+        public void TestSimpleOperation()
+        {
+            var queue = ImmutableQueue.Create<int>();
+            queue = queue.Enqueue(1);
+            queue = queue.Enqueue(2);
+            queue = queue.Enqueue(3);
 
-			Assert.AreEqual (1, queue.Peek ());
-			queue = queue.Dequeue ();
-			Assert.IsFalse (queue.IsEmpty);
+            Assert.AreEqual(1, queue.Peek());
+            queue = queue.Dequeue();
+            Assert.IsFalse(queue.IsEmpty);
 
-			Assert.AreEqual (2, queue.Peek ());
-			queue = queue.Dequeue ();
-			Assert.IsFalse (queue.IsEmpty);
+            Assert.AreEqual(2, queue.Peek());
+            queue = queue.Dequeue();
+            Assert.IsFalse(queue.IsEmpty);
 
-			Assert.AreEqual (3, queue.Peek ());
-			queue = queue.Dequeue ();
-			Assert.IsTrue (queue.IsEmpty);
-		}
+            Assert.AreEqual(3, queue.Peek());
+            queue = queue.Dequeue();
+            Assert.IsTrue(queue.IsEmpty);
+        }
 
-		[Test]
-		public void TestPeek ()
-		{
-			var s = ImmutableQueue.Create<int> ();
-			s = s.Enqueue (1);
+        [Test]
+        public void TestPeek()
+        {
+            var s = ImmutableQueue.Create<int>();
+            s = s.Enqueue(1);
 
-			Assert.AreEqual (1, s.Peek (), "#1");
-		}
+            Assert.AreEqual(1, s.Peek(), "#1");
+        }
 
-		[Test]
-		[ExpectedException (typeof (InvalidOperationException))]
-		public void TestPeekEx ()
-		{
-			var s = ImmutableQueue.Create<int> ();
-			s.Peek ();
-		}
+        [Test]
+        [ExpectedException (typeof (InvalidOperationException))]
+        public void TestPeekEx()
+        {
+            var s = ImmutableQueue.Create<int>();
+            s.Peek();
+        }
 
-		[Test]
-		[ExpectedException (typeof (InvalidOperationException))]
-		public void TestPeekEx2 ()
-		{
-			var s = ImmutableQueue.Create<int> ();
-			s = s.Enqueue (1);
-			s = s.Dequeue ();
-			s.Peek ();
-		}
+        [Test]
+        [ExpectedException (typeof (InvalidOperationException))]
+        public void TestPeekEx2()
+        {
+            var s = ImmutableQueue.Create<int>();
+            s = s.Enqueue(1);
+            s = s.Dequeue();
+            s.Peek();
+        }
 
-		[Test]
-		[ExpectedException (typeof (InvalidOperationException))]
-		public void TestDequeueEx ()
-		{
-			var s = ImmutableQueue.Create<int> ();
-			s.Dequeue ();
-		}
+        [Test]
+        [ExpectedException (typeof (InvalidOperationException))]
+        public void TestDequeueEx()
+        {
+            var s = ImmutableQueue.Create<int>();
+            s.Dequeue();
+        }
 
-		[Test]
-		[ExpectedException (typeof (InvalidOperationException))]
-		public void TestDequeueEx2 ()
-		{
-			var s = ImmutableQueue.Create<int> ();
-			s = s.Enqueue (1);
-			s = s.Dequeue ();
-			s.Dequeue ();
-		}
+        [Test]
+        [ExpectedException (typeof (InvalidOperationException))]
+        public void TestDequeueEx2()
+        {
+            var s = ImmutableQueue.Create<int>();
+            s = s.Enqueue(1);
+            s = s.Dequeue();
+            s.Dequeue();
+        }
 
-		[Test]
-		public void TestEnumerator ()
-		{
-			var s = ImmutableQueue.Create<int> ();
+        [Test]
+		public void TestEnumerator()
+        {
+            var s = ImmutableQueue.Create<int>();
 
-			foreach (int x in s)
-				Assert.Fail ("#1" + x);
+            foreach (int x in s)
+                Assert.Fail("#1" + x);
 
-			s = s.Enqueue (1);
+            s = s.Enqueue(1);
 
-			int i = 0;
+            int i = 0;
 
-			foreach (int x in s) {
-				Assert.AreEqual  (0, i, "#2");
-				Assert.AreEqual  (1, x, "#3");
-				i ++;
-			}
+            foreach (int x in s)
+            {
+                Assert.AreEqual(0, i, "#2");
+                Assert.AreEqual(1, x, "#3");
+                i ++;
+            }
 
-			for (i = 2; i < 100; i ++)
-				s = s.Enqueue (i);
+            for (i = 2; i < 100; i ++)
+                s = s.Enqueue(i);
 
-			i = 1;
+            i = 1;
 
-			foreach (int x in s) {
-				Assert.AreEqual (i, x, "#4");
-				i ++;
-			}
-		}
-
-
-
-	}
+            foreach (int x in s)
+            {
+                Assert.AreEqual(i, x, "#4");
+                i ++;
+            }
+        }
+    }
 }
 

@@ -23,24 +23,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
 using System;
 using System.Collections.Generic;
 
 namespace System.Collections.Immutable
 {
-	public interface IImmutableStack<T> : IEnumerable<T>, IEnumerable
-	{
-		bool IsEmpty {
-			get;
-		}
+    public interface IImmutableStack<T> : IEnumerable<T>, IEnumerable
+    {
+        bool IsEmpty
+        {
+            get;
+        }
 
-		IImmutableStack<T> Clear ();
+        IImmutableStack<T> Clear();
 
-		T Peek ();
+        T Peek();
 
-		IImmutableStack<T> Pop ();
+        IImmutableStack<T> Pop();
 
-		IImmutableStack<T> Push (T value);
-	}
+        IImmutableStack<T> Push(T value);
+    }
 }

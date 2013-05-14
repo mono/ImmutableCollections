@@ -23,183 +23,182 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
 using System;
 using System.Collections.Generic;
 
 namespace System.Collections.Immutable
 {
-	public class ImmutableStack<T> : IImmutableStack<T>
-	{
-		readonly T head;
-		readonly ImmutableStack<T> tail;
+    public class ImmutableStack<T> : IImmutableStack<T>
+    {
+        readonly T head;
+        readonly ImmutableStack<T> tail;
 
-		internal ImmutableStack ()
-		{
-		}
+        internal ImmutableStack()
+        {
+        }
 
-		ImmutableStack (T head, ImmutableStack<T> tail)
-		{
-			this.head = head;
-			this.tail = tail;
-		}
+        ImmutableStack(T head, ImmutableStack<T> tail)
+        {
+            this.head = head;
+            this.tail = tail;
+        }
+        #region IImmutableStack implementation
+        internal static readonly ImmutableStack<T> Empty = new ImmutableStack<T>();
 
-		#region IImmutableStack implementation
-		internal static readonly ImmutableStack<T> Empty = new ImmutableStack<T> ();
+        public bool IsEmpty
+        {
+            get { return tail == null; }
+        }
 
-		public bool IsEmpty {
-			get { return tail == null; }
-		}
+        public ImmutableStack<T> Clear()
+        {
+            return Empty;
+        }
 
-		public ImmutableStack<T> Clear ()
-		{
-			return Empty;
-		}
+        IImmutableStack<T> IImmutableStack<T>.Clear()
+        {
+            return Empty;
+        }
 
-		IImmutableStack<T> IImmutableStack<T>.Clear ()
-		{
-			return Empty;
-		}
+        public T Peek()
+        {
+            if (IsEmpty)
+                throw new InvalidOperationException("Stack is empty.");
+            return head;
+        }
 
-		public T Peek ()
-		{
-			if (IsEmpty)
-				throw new InvalidOperationException ("Stack is empty.");
-			return head;
-		}
+        public ImmutableStack<T> Pop()
+        {
+            if (IsEmpty)
+                throw new InvalidOperationException("Stack is empty.");
+            return tail;
+        }
 
-		public ImmutableStack<T> Pop ()
-		{
-			if (IsEmpty)
-				throw new InvalidOperationException ("Stack is empty.");
-			return tail;
-		}
+        public ImmutableStack<T> Pop(out T value)
+        {
+            value = Peek();
+            return Pop();
+        }
 
-		public ImmutableStack<T> Pop (out T value)
-		{
-			value = Peek ();
-			return Pop ();
-		}
+        IImmutableStack<T> IImmutableStack<T>.Pop()
+        {
+            return Pop();
+        }
 
-		IImmutableStack<T> IImmutableStack<T>.Pop ()
-		{
-			return Pop ();
-		}
+        public ImmutableStack<T> Push(T value)
+        {
+            return new ImmutableStack<T>(value, this);
+        }
 
-		public ImmutableStack<T> Push (T value)
-		{
-			return new ImmutableStack<T> (value, this);
-		}
+        IImmutableStack<T> IImmutableStack<T>.Push(T value)
+        {
+            return Push(value);
+        }
+        #endregion
 
-		IImmutableStack<T> IImmutableStack<T>.Push (T value)
-		{
-			return Push (value);
-		}
+        #region IEnumerable<T> implementation
 
-		#endregion
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
 
-		#region IEnumerable<T> implementation
+        struct Enumerator : IEnumerator<T>
+        {
+            readonly ImmutableStack<T> start;
+            IImmutableStack<T> current;
 
-		public IEnumerator<T> GetEnumerator ()
-		{
-			return new Enumerator (this);
-		}
+            public Enumerator(ImmutableStack<T> stack)
+            {
+                this.start = stack;
+                this.current = null;
+            }
+            #region IEnumerator implementation
 
-		struct Enumerator : IEnumerator<T>
-		{
-			readonly ImmutableStack<T> start;
-			IImmutableStack<T> current;
+            bool IEnumerator.MoveNext()
+            {
+                if (current == null)
+                {
+                    current = this.start;
+                }
+                else if (!current.IsEmpty)
+                {
+                    current = current.Pop();
+                }
 
-			public Enumerator (ImmutableStack<T> stack)
-			{
-				this.start = stack;
-				this.current = null;
-			}
+                return !current.IsEmpty;
+            }
 
-			#region IEnumerator implementation
+            void IEnumerator.Reset()
+            {
+                current = null;
+            }
 
-			bool IEnumerator.MoveNext ()
-			{
-				if (current == null) {
-					current = this.start;
-				} else if (!current.IsEmpty) {
-					current = current.Pop ();
-				}
+            object IEnumerator.Current
+            {
+                get { return this.Current; }
+            }
+            #endregion
 
-				return !current.IsEmpty;
-			}
+            #region IDisposable implementation
+            void IDisposable.Dispose()
+            {
+            }
+            #endregion
 
-			void IEnumerator.Reset ()
-			{
-				current = null;
-			}
+            #region IEnumerator implementation
 
-			object IEnumerator.Current {
-				get { return this.Current; }
-			}
-			#endregion
+            public T Current
+            {
+                get
+                {
+                    return current != null ? current.Peek() : default(T);
+                }
+            }
+            #endregion
+        }
+        #endregion
 
-			#region IDisposable implementation
-			void IDisposable.Dispose ()
-			{
-			}
-			#endregion
+        #region IEnumerable implementation
 
-			#region IEnumerator implementation
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+        #endregion
+    }
 
-			public T Current {
-				get {
-					return current != null ? current.Peek () : default(T);
-				}
-			}
+    public static class ImmutableStack
+    {
+        public static ImmutableStack<T> Create<T>()
+        {
+            return ImmutableStack<T>.Empty;
+        }
 
-			#endregion
-		}
+        public static ImmutableStack<T> Create<T>(T item)
+        {
+            return Create<T>().Push(item);
+        }
 
-		#endregion
+        public static ImmutableStack<T> Create<T>(IEnumerable<T> items)
+        {
+            var result = ImmutableStack<T>.Empty;
+            foreach (var item in items)
+                result = result.Push(item);
+            return result;
+        }
 
-		#region IEnumerable implementation
+        public static ImmutableStack<T> Create<T>(params T[] items)
+        {
+            return Create((IEnumerable<T>)items);
+        }
 
-		IEnumerator IEnumerable.GetEnumerator ()
-		{
-			return this.GetEnumerator ();
-		}
-
-		#endregion
-	}
-
-	public static class ImmutableStack
-	{
-		public static ImmutableStack<T> Create<T> ()
-		{
-			return ImmutableStack<T>.Empty;
-		}
-
-		public static ImmutableStack<T> Create<T> (T item)
-		{
-			return Create<T> ().Push (item);
-		}
-
-		public static ImmutableStack<T> Create<T> (IEnumerable<T> items)
-		{
-			var result = ImmutableStack<T>.Empty;
-			foreach (var item in items)
-				result = result.Push (item);
-			return result;
-		}
-
-		public static ImmutableStack<T> Create<T> (params T[] items)
-		{
-			return Create ((IEnumerable<T>)items);
-		}
-
-		public static IImmutableStack<T> Pop<T> (this IImmutableStack<T> stack, out T value)
-		{
-			if (stack == null)
-				throw new ArgumentNullException ("stack");
-			value = stack.Peek ();
-			return stack.Pop ();
-		}
-	}
-
+        public static IImmutableStack<T> Pop<T>(this IImmutableStack<T> stack, out T value)
+        {
+            if (stack == null)
+                throw new ArgumentNullException("stack");
+            value = stack.Peek();
+            return stack.Pop();
+        }
+    }
 }
