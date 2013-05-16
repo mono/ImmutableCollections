@@ -149,7 +149,7 @@ namespace System.Collections.Immutable
                 if (frontStack == null)
                 {
                     frontStack = start.frontStack;
-                    backStack = start.backStack;
+                    backStack = Reverse (start.backStack);
                 }
                 else if (!frontStack.IsEmpty)
                 {
@@ -159,7 +159,7 @@ namespace System.Collections.Immutable
                 {
                     backStack = backStack.Pop();
                 }
-                return !(frontStack.IsEmpty || backStack.IsEmpty);
+                return !(frontStack.IsEmpty && backStack.IsEmpty);
             }
 
             void IEnumerator.Reset()

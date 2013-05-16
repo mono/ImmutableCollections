@@ -26,6 +26,7 @@
 using System;
 using NUnit.Framework;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace UnitTests
 {
@@ -121,7 +122,7 @@ namespace UnitTests
                 s = s.Enqueue(i);
 
             i = 1;
-
+            Assert.AreEqual (99, s.Count ());
             foreach (int x in s)
             {
                 Assert.AreEqual(i, x, "#4");
